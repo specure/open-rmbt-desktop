@@ -2,16 +2,22 @@ import { EMeasurementFinalStatus } from "../enums/measurement-final-status"
 import { ICPU } from "./cpu.interface"
 
 export interface IMeasurementResult {
+    client_language?: string
     client_uuid: string
     client_name?: string
     client_version?: string
+    client_software_version?: string
     cpu?: ICPU
     model?: string
+    num_threads_ul?: number
     network_type?: number
     operating_system?: string
+    os_version?: string
     pings: IPing[]
     platform?: string
+    plattform?: string
     speed_detail: ISpeedItem[]
+    signals: string[]
     test_bytes_download: number
     test_bytes_upload: number
     test_nsec_download: number

@@ -14,11 +14,12 @@ import { ELoggerMessage } from "./enums/logger-message.enum"
 import { IUserSettings } from "./interfaces/user-settings-response.interface"
 import { IMeasurementServerResponse } from "./interfaces/measurement-server-response.interface"
 import { config } from "dotenv"
-import { IPInfoService } from "./services/ip-info.service"
+import { NetworkInfoService } from "./services/network-info.service"
 import { DBService } from "./services/db.service"
 import "reflect-metadata"
 import { EMeasurementFinalStatus } from "./enums/measurement-final-status"
-import { Store } from "./services/store.service"
+import { AutoUpdater } from "./services/auto-updater.service"
+import { ACTIVE_SERVER, Store } from "./services/store.service"
 
 config({
     path: process.env.RMBT_DESKTOP_DOTENV_CONFIG_PATH || ".env",
@@ -51,11 +52,12 @@ export class MeasurementRunner {
 
     async registerClient(options?: MeasurementOptions): Promise<IUserSettings> {
         try {
+            AutoUpdater.I.checkForNewRelease()
             this.settingsRequest = new UserSettingsRequest(options?.platform)
             this.settings = await ControlServer.I.getUserSettings(
                 this.settingsRequest
             )
-            const ipInfo = await IPInfoService.I.getIPInfo(
+            const ipInfo = await NetworkInfoService.I.getIPInfo(
                 this.settings,
                 this.settingsRequest
             )
@@ -78,6 +80,10 @@ export class MeasurementRunner {
 
             const threadResults = await this.rmbtClient!.scheduleMeasurement()
             this.setCPUUsage()
+            this.registrationRequest = {
+                ...this.registrationRequest!,
+                networkType: await NetworkInfoService.I.getNetworkType(),
+            }
             const result = new MeasurementResult(
                 this.registrationRequest!,
                 this.rmbtClient!.params!,
@@ -97,10 +103,10 @@ export class MeasurementRunner {
             ) {
                 this.rmbtClient!.measurementStatus = EMeasurementStatus.END
             }
-        } catch (e) {
+        } catch (e: any) {
             if (e) {
-                // Logger.I.error(e)
-                throw e
+                Logger.I.error(e)
+                throw e.message
             }
         } finally {
             this.setCPUUsage()
@@ -144,10 +150,6 @@ export class MeasurementRunner {
         }
     }
 
-    async getMeasurementResult(testUuid: string) {
-        return await ControlServer.I.getMeasurementResult(testUuid)
-    }
-
     getCPUUsage(): ICPU | undefined {
         return this.cpuInfo
     }
@@ -187,10 +189,16 @@ export class MeasurementRunner {
     }
 
     private async setMeasurementServer() {
-        this.measurementServer =
-            await ControlServer.I.getMeasurementServerFromApi(
-                this.settingsRequest!
-            )
+        this.measurementServer = Store.I.get(
+            ACTIVE_SERVER
+        ) as IMeasurementServerResponse
+        if (!this.measurementServer) {
+            const measurementServers =
+                await ControlServer.I.getMeasurementServersFromApi(
+                    this.settingsRequest!
+                )
+            this.measurementServer = measurementServers[0]
+        }
     }
 
     private async registerMeasurement() {

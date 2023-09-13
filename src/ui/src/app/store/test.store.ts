@@ -9,6 +9,7 @@ import { TestPhaseState } from "../dto/test-phase-state.dto"
 import { EMeasurementStatus } from "../../../../measurement/enums/measurement-status.enum"
 import { Router } from "@angular/router"
 import { MainStore } from "./main.store"
+import { IMeasurementServerResponse } from "../../../../measurement/interfaces/measurement-server-response.interface"
 
 export const STATE_UPDATE_TIMEOUT = 200
 
@@ -25,6 +26,7 @@ export class TestStore {
     simpleHistoryResult$ = new BehaviorSubject<ISimpleHistoryResult | null>(
         null
     )
+    servers$ = new BehaviorSubject<IMeasurementServerResponse[]>([])
 
     constructor(private mainStore: MainStore, private router: Router) {}
 
@@ -59,17 +61,12 @@ export class TestStore {
                     up: result.uploadKbit / 1000,
                     ping: result.ping / 1e6,
                 })
-                const newState = TestVisualizationState.from(
+                const newState = TestVisualizationState.fromHistoryResult(
+                    result,
                     this.visualization$.value,
                     newPhase,
                     this.mainStore.env$.value?.FLAVOR ?? "rtr"
                 )
-                newState.phases[
-                    EMeasurementStatus.DOWN
-                ].setChartFromOverallSpeed?.(result.downloadOverTime ?? [])
-                newState.phases[
-                    EMeasurementStatus.UP
-                ].setChartFromOverallSpeed?.(result.uploadOverTime ?? [])
                 this.visualization$.next(newState)
                 this.basicNetworkInfo$.next({
                     serverName: result.measurementServerName,
@@ -90,6 +87,22 @@ export class TestStore {
                 return result
             })
         )
+    }
+
+    getServers() {
+        window.electronAPI.getServers().then((servers) => {
+            this.servers$.next(servers)
+        })
+    }
+
+    setActiveServer(server: IMeasurementServerResponse) {
+        window.electronAPI.setActiveServer(server)
+        const updatedServers = this.servers$.value.map((s) =>
+            s.webAddress === server.webAddress
+                ? { ...s, active: true }
+                : { ...s, active: false }
+        )
+        this.servers$.next(updatedServers)
     }
 
     private resetState() {

@@ -2,6 +2,7 @@ import { EMeasurementServerType } from "../enums/measurement-server-type.enum"
 import { IGeolocation } from "./geolocation.interface"
 
 export interface IMeasurementRegistrationRequest {
+    app_version?: string
     capabilities?: { [key: string]: any }
     client: EMeasurementServerType
     language: string
@@ -19,10 +20,14 @@ export interface IMeasurementRegistrationRequest {
     }
     measurement_server_id?: number
     measurement_type_flag: string
+    model?: string
     ndt?: boolean
+    networkType?: number
     num_threads?: number
+    os_version?: string
     operating_system?: string
     platform?: string
+    plattform?: string
     prefer_server?: number
     previousTestStatus?: string
     protocol_version?: string

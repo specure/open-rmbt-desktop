@@ -8,7 +8,7 @@ export class MeasurementRegistrationRequest
     implements IMeasurementRegistrationRequest
 {
     client = EMeasurementServerType.RMBTel
-    language = I18nService.I.getActiveLanguage()
+    language = ""
     measurement_server_id: number | undefined
     measurement_type_flag = "regular"
     prefer_server: number | undefined
@@ -17,6 +17,7 @@ export class MeasurementRegistrationRequest
     type = ""
     user_server_selection = false
     app_version = registry.version
+    networkType?: number | undefined
 
     constructor(
         public uuid: string,
@@ -31,12 +32,16 @@ export class MeasurementRegistrationRequest
         if (settingsRequest) {
             Object.assign(this, {
                 capabilities: settingsRequest.capabilities,
+                model: settingsRequest.model,
                 language: settingsRequest.language,
                 operating_system: settingsRequest.operating_system,
+                os_version: settingsRequest.os_version,
                 platform: settingsRequest.platform,
+                plattform: settingsRequest.plattform,
                 timezone: settingsRequest.timezone,
                 type: settingsRequest.type,
             })
         }
+        this.language = I18nService.I.getActiveLanguage()
     }
 }

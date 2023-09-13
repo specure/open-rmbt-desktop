@@ -12,14 +12,24 @@ import { IOverallResult } from "../interfaces/overall-result.interface"
 import { TransferDirection } from "../services/rmbt-client.service"
 
 export class MeasurementResult implements IMeasurementResult {
+    client_language?: string
     client_name?: string
+    client_software_version?: string
     client_version?: string
     client_uuid: string
     cpu?: ICPU
-    network_type = 0 // TODO: detect the real one, 0 == Unknown
+    model: string
+    ip_address?: string | undefined
+    measurement_server?: string
+    network_type = 0
+    num_threads_ul?: number
     operating_system: string
     pings: IPing[]
     platform: string
+    plattform: string
+    provider_name?: string
+    sent_to_server = false
+    signals: string[] = []
     speed_detail: ISpeedItem[]
     test_bytes_download: number
     test_bytes_upload: number
@@ -36,10 +46,7 @@ export class MeasurementResult implements IMeasurementResult {
     timezone: string
     type: string
     user_server_selection: number
-    measurement_server?: string
-    provider_name?: string
-    ip_address?: string | undefined
-    sent_to_server = false
+    os_version: string
 
     constructor(
         registrationRequest: IMeasurementRegistrationRequest,
@@ -50,13 +57,22 @@ export class MeasurementResult implements IMeasurementResult {
         cpu?: ICPU,
         testStatus?: EMeasurementFinalStatus
     ) {
+        this.client_language = registrationRequest.language
         this.client_name = registrationRequest.client
         this.client_version = threadResults[0]?.client_version ?? ""
+        this.client_software_version = registrationRequest.app_version
         this.client_uuid = registrationRequest.uuid ?? ""
+        this.model = registrationRequest.model ?? ""
+        this.num_threads_ul = threadResults.reduce(
+            (acc, thread) => (thread.up.bytes.length ? (acc += 1) : acc),
+            0
+        )
+        this.os_version = registrationRequest.os_version ?? ""
         this.operating_system = registrationRequest.operating_system ?? ""
         this.pings = MeasurementResult.getPings(threadResults)
         this.test_ping_shortest = MeasurementResult.getShortestPing(this.pings)
         this.platform = registrationRequest.platform ?? ""
+        this.plattform = registrationRequest.plattform ?? ""
         this.speed_detail = MeasurementResult.getSpeedDetail(threadResults)
         this.test_num_threads = registrationResponse.test_numthreads
         this.test_token = registrationResponse.test_token
@@ -78,6 +94,7 @@ export class MeasurementResult implements IMeasurementResult {
         this.provider_name = registrationResponse.provider
         this.ip_address = registrationResponse.client_remote_ip
         this.test_status = testStatus
+        this.network_type = registrationRequest.networkType ?? 0
     }
 
     static getPings(threadResults: IMeasurementThreadResult[]) {
