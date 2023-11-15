@@ -73,6 +73,12 @@ to get a `*.dmg` file for standalone distribution (e.g. via GitHub Releases).
 
 In both cases, a `*.pkg` and a `*.dmg` will be placed in the `out/make` folder at the root of the project.
 
+Provide `--nosign` option to the commands above, if you don't want the builder to go through the signing procedure, like this:
+
+```sh
+$ npm run make:macos -- --nosign
+```
+
 7. To upload the `*.pkg` file to AppStore use Transporter: https://apps.apple.com/us/app/transporter/id1450874784.
 
 _Note: by default macOS overwrites already installed packages, so, if you want to see the app in the menu and in the Applications folder on your dev machine, make sure to remove RMBTDesktop.app from anywhere else, including the `out` folder, before installing the `*.pkg`_
@@ -169,3 +175,9 @@ The project contains a `.env.example` file. You can use it as an example to conf
 | `LOOP_MODE_MAX_INTERVAL`             | Maximal allowed interval between tests in the loop mode, in minutes.                                                                                                                                                                               |
 | `LOOP_MODE_DEFAULT_INTERVAL`         | Interval between tests in the loop mode, in minutes, suggested by default.                                                                                                                                                                         |
 | `LOOP_MODE_MAX_DURATION`             | Maximal allowed duration of the loop mode tests, in minutes.                                                                                                                                                                                       |
+| `CPU_WARNING_PERCENT`                | Threshold of the CPU usage in percent, after which a warning is shown to the user during a test. Requires `LOG_CPU_USAGE` to be set to work.                                                                                                       |
+| `ENABLE_HOME_SCREEN_JITTER_BOX`      | Enable the box on the home screen, that shows current ping, packet loss and jitter.                                                                                                                                                                |
+| `PACK_NAME`                          | NPM name of the package.                                                                                                                                                                                                                           |
+| `PACK_PRODUCT_NAME`                  | Human readable name of the package.                                                                                                                                                                                                                |
+| `PACK_DESCRIPTION`                   | Description of the package.                                                                                                                                                                                                                        |
+| `PACK_AUTHOR`                        | Author of the package.                                                                                                                                                                                                                             |

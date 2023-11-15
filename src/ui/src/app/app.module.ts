@@ -122,6 +122,9 @@ import { ExpandArrowComponent } from "./widgets/expand-arrow/expand-arrow.compon
 import { RouterLinkComponent } from "./widgets/router-link/router-link.component"
 import { LoopResultScreenComponent } from "./screens/loop-result-screen/loop-result-screen.component"
 import { LoopTestScreenComponent } from "./screens/loop-test-screen/loop-test-screen.component"
+import { TranslatePipe } from "./pipes/translate.pipe"
+import { MarkdownModule } from "ngx-markdown"
+import { SocialButtonsComponent } from "./widgets/social-buttons/social-buttons.component"
 
 Chart.register(
     BarElement,
@@ -147,7 +150,7 @@ declare global {
             setActiveClient: (client: string) => Promise<void>
             setActiveLanguage: (language: string) => Promise<void>
             setActiveServer: (
-                server: IMeasurementServerResponse
+                server: IMeasurementServerResponse | null
             ) => Promise<void>
             setDefaultLanguage: (language: string) => Promise<void>
             runMeasurement: (loopModeInfo?: ILoopModeInfo) => Promise<void>
@@ -174,7 +177,10 @@ declare global {
             ) => Promise<any>
             onLoopModeExpired: (callback: () => any) => Promise<any>
             deleteLocalData: () => Promise<void>
-            scheduleLoop: (loopInterval: number) => Promise<void>
+            scheduleLoop: (
+                loopInterval: number,
+                loopModeInfo: ILoopModeInfo
+            ) => Promise<void>
         }
     }
 }
@@ -236,6 +242,8 @@ declare global {
         RouterLinkComponent,
         LoopResultScreenComponent,
         LoopTestScreenComponent,
+        TranslatePipe,
+        SocialButtonsComponent,
     ],
     imports: [
         AppRoutingModule,
@@ -244,6 +252,7 @@ declare global {
         FormsModule,
         ReactiveFormsModule,
         HttpClientModule,
+        MarkdownModule.forRoot(),
         MatButtonModule,
         MatDialogModule,
         MatIconModule,
