@@ -81,7 +81,7 @@
         "uuidv4": "^6.2.13"
     },
     "gitInfo": {
-        "hash": "2a554b1dfd5f6d73d9941ee208bb7105a1770e23",
-        "branch": "ci/cd"
+        "hash": "b7beace52897d0b58f2b80e288ab247f7cbfb5af",
+        "branch": "dev"
     }
 }
