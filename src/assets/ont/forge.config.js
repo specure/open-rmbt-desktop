@@ -65,9 +65,9 @@ module.exports = {
                           certificateFile: process.env.WINDOWS_CERT_PATH,
                       }
                     : {
-                          // https://www.files.certum.eu/documents/manual_en/Code-Signing-signing-the-code-using-tools-like-Singtool-and-Jarsigner_v2.3.pdf
+                          //  https://support.globalsign.com/code-signing/code-signing-windows-7-8-and-10
                           signWithParams:
-                              "/fd sha256 /a /t http://time.certum.pl/",
+                              "/a /tr http://timestamp.globalsign.com/tsa/r6advanced1 /td SHA256 /fd SHA256",
                       }),
                 loadingGif: path.join(
                     process.env.ASSETS_FOLDER,
