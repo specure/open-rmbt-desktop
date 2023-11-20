@@ -1,5 +1,5 @@
 require("dotenv").config(process.env.RMBT_DESKTOP_DOTENV_CONFIG_PATH || ".env")
-const { Octokit } = require("@octokit/core")
+const { Octokit } = require("@octokit/rest")
 const octokit = new Octokit({
     auth: process.env.GITHUB_TOKEN,
 })
@@ -15,52 +15,46 @@ async function main() {
 }
 
 async function createRelease() {
-    const release = await octokit.request(
-        `POST /repos/${owner}/${repo}/releases`,
-        {
-            owner,
-            repo,
-            tag_name: "v" + packJson.version,
-            target_commitish: "master",
-            name: "v" + packJson.version,
-            body: "",
-            draft: false,
-            prerelease: false,
-            generate_release_notes: false,
-            headers: {
-                "X-GitHub-Api-Version": "2022-11-28",
-            },
-        }
-    )
+    const name = "v" + packJson.version
+    const release = await octokit.repos.createRelease({
+        owner,
+        repo,
+        tag_name: name,
+        name,
+        draft: false,
+        prerelease: false,
+        generate_release_notes: false,
+        target_commitish: "master",
+    })
     console.log(release.data)
     return release
 }
 
 async function uploadBuild(release) {
-    const packName = `${packJson.productName}-${packJson.version} Setup.exe`
-    const resp = await octokit.request(
-        `POST /repos/${owner}/${repo}/releases/${release.data.id}/assets{?name,label}`,
-        {
-            owner,
-            repo,
-            release_id: release.data.id,
-            headers: {
-                "X-GitHub-Api-Version": "2022-11-28",
-            },
-            data: fs.readFileSync(
-                path.resolve(
-                    __dirname,
-                    "..",
-                    "out",
-                    "make",
-                    "squirrel.windows",
-                    "x64",
-                    packName
-                )
-            ),
-        }
+    const name = `${packJson.productName}-${packJson.version} Setup.exe`
+    const buildPath = path.resolve(
+        __dirname,
+        "..",
+        "out",
+        "make",
+        "squirrel.windows",
+        "x64",
+        name
     )
-    console.log(resp.data)
+    console.log(`Uploading ${buildPath}, ${release.data.id}`)
+    const data = fs.readFileSync(buildPath)
+    const resp = await octokit.repos.uploadReleaseAsset({
+        owner,
+        repo,
+        release_id: release.data.id,
+        name,
+        data,
+        headers: {
+            "content-type": "application/octet-stream",
+            "content-length": data.byteLength,
+        },
+    })
+    console.log(resp)
 }
 
 main()
