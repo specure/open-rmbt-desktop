@@ -10,12 +10,40 @@ const owner = "specure"
 const repo = "open-rmbt-node"
 
 async function main() {
-    const release = await createRelease()
+    let release
+    try {
+        release = await createRelease()
+    } catch (e) {
+        console.warn(e)
+        console.warn(
+            "Could not create new release. Looking for the latest one."
+        )
+        release = await getLastRelease()
+    }
+    const name = getTagName()
+    if (release?.data.tag_name !== name) {
+        throw new Error(
+            `The latest release version ${release?.data.tag_name} does not match the current app version ${name}.`
+        )
+    }
     await uploadBuild(release)
 }
 
+async function getLastRelease() {
+    const release = await octokit.repos.getLatestRelease({
+        owner,
+        repo,
+    })
+    console.log(release.data)
+    return release
+}
+
+function getTagName() {
+    return "v" + packJson.version
+}
+
 async function createRelease() {
-    const name = "v" + packJson.version
+    const name = getTagName()
     const release = await octokit.repos.createRelease({
         owner,
         repo,
@@ -32,6 +60,12 @@ async function createRelease() {
 
 async function uploadBuild(release) {
     const name = `${packJson.productName}-${packJson.version} Setup.exe`
+    for (const asset of release.data.assets) {
+        if (asset.name === name.replaceAll(" ", "")) {
+            console.log("The build is already uploaded. Terminating the job.")
+            return
+        }
+    }
     const buildPath = path.resolve(
         __dirname,
         "..",
