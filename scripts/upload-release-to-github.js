@@ -60,8 +60,9 @@ async function createRelease() {
 
 async function uploadBuild(release) {
     const name = `${packJson.productName}-${packJson.version} Setup.exe`
+    const normalizedName = `${packJson.productName}.${packJson.version}.Setup.exe`
     for (const asset of release.data.assets) {
-        if (asset.name === name.replaceAll(" ", "")) {
+        if (asset.name === normalizedName) {
             console.log("The build is already uploaded. Terminating the job.")
             return
         }
@@ -81,7 +82,7 @@ async function uploadBuild(release) {
         owner,
         repo,
         release_id: release.data.id,
-        name: encodeURIComponent(name),
+        name: normalizedName,
         data,
         headers: {
             "content-type": "application/octet-stream",
