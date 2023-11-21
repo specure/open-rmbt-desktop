@@ -64,11 +64,7 @@ module.exports = {
                     ? {
                           certificateFile: process.env.WINDOWS_CERT_PATH,
                       }
-                    : {
-                          //  https://support.globalsign.com/code-signing/code-signing-windows-7-8-and-10
-                          signWithParams:
-                              "/a /tr http://timestamp.globalsign.com/tsa/r6advanced1 /td SHA256 /fd SHA256",
-                      }),
+                    : { signWithParams: process.env.WINDOWS_SIGNING_PARAMS }),
                 loadingGif: path.join(
                     process.env.ASSETS_FOLDER,
                     "images",
