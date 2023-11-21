@@ -89,7 +89,8 @@ _Note: by default macOS overwrites already installed packages, so, if you want t
 Requires Windows 10 or later.
 
 1. Configure, if needed, `@electron-forge/maker-squirrel` options of `src/assets/<FLAVOR>/forge.config.js`.
-2. Build the distributable with
+2. Set `WINDOWS_CERT_PATH` or `WINDOWS_SIGNING_PARAMS` in the `.env` file for the signtool.
+3. Build the distributable with
 
 ```sh
 $ npm run make:windows
@@ -170,6 +171,7 @@ The project contains a `.env.example` file. You can use it as an example to conf
 | `APPLE_PASSWORD`                     | App-specific password. See https://support.apple.com/en-us/HT204397 for details.                                                                                                                                                                   |
 | `APPLE_TEAM_ID`                      | The Apple Team ID you want to notarize under. You can find Team IDs for team you belong to by going to https://developer.apple.com/account/#/membership.                                                                                           |
 | `WINDOWS_CERT_PATH`                  | Full path to your certificate.pfx                                                                                                                                                                                                                  |
+| `WINDOWS_SIGNING_PARAMS`             | The signing params for the Windows' `signtool`, useful with hardware EV tokens.                                                                                                                                                                    |
 | `GITHUB_API_URL`                     | https://api.github.com/repos/<account>/<repo>, is used to check for new releases.                                                                                                                                                                  |
 | `GITHUB_TOKEN`                       | Github API token.                                                                                                                                                                                                                                  |
 | `LOOP_MODE_MIN_INTERVAL`             | Minimal allowed interval between tests in the loop mode, in minutes.                                                                                                                                                                               |
