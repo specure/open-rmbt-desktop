@@ -60,7 +60,7 @@ async function createRelease() {
 
 async function uploadBuild(release) {
     const name = `${packJson.productName}-${packJson.version} Setup.exe`
-    const normalizedName = `${packJson.productName}_${packJson.version}_Setup.exe`
+    const normalizedName = `${packJson.productName}.${packJson.version}.Setup.exe`
     for (const asset of release.data.assets) {
         if (asset.name === normalizedName) {
             console.log("The build is already uploaded. Terminating the job.")
