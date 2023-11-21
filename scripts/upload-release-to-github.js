@@ -82,7 +82,7 @@ async function uploadBuild(release) {
         owner,
         repo,
         release_id: release.data.id,
-        name: normalizedName,
+        name: encodeURIComponent(normalizedName),
         data,
         headers: {
             "content-type": "application/octet-stream",
