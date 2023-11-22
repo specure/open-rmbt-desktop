@@ -69,6 +69,8 @@ const createWindow = () => {
 
     Menu.setApplicationMenu(buildMenu())
 
+    Store.I.delete(ACTIVE_SERVER)
+
     if (process.env.DEV === "true") {
         win.loadURL("http://localhost:4200/")
         setTimeout(() => {
