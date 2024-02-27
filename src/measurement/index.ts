@@ -21,6 +21,7 @@ import { EMeasurementFinalStatus } from "./enums/measurement-final-status"
 import { AutoUpdater } from "./services/auto-updater.service"
 import { ACTIVE_SERVER, Store } from "./services/store.service"
 import { ILoopModeInfo } from "./interfaces/measurement-registration-request.interface"
+import { IMeasurementRegistrationResponse } from "./interfaces/measurement-registration-response.interface"
 
 config({
     path: process.env.RMBT_DESKTOP_DOTENV_CONFIG_PATH || ".env",
@@ -259,6 +260,25 @@ export class MeasurementRunner {
         }
     }
 
+    private ensureCorrectServer(params: IMeasurementRegistrationResponse) {
+        if (!this.measurementServer) {
+            return params
+        }
+        const details = this.measurementServer.serverTypeDetails.find(
+            (d) => d.serverType == this.settingsRequest?.name
+        )
+        if (!details) {
+            return params
+        }
+        params.test_server_address = this.measurementServer.webAddress
+        params.test_server_port = details.encrypted
+            ? details.portSsl
+            : details.port
+        params.test_server_encryption = details.encrypted
+        params.test_server_type = this.settingsRequest?.name
+        return params
+    }
+
     private async registerMeasurement(options?: MeasurementOptions) {
         this.registrationRequest = new MeasurementRegistrationRequest(
             this.settings!.uuid,
@@ -274,7 +294,9 @@ export class MeasurementRunner {
         }
         const measurementRegistration =
             await ControlServer.I.registerMeasurement(this.registrationRequest)
-        this.rmbtClient = new RMBTClient(measurementRegistration)
+        this.rmbtClient = new RMBTClient(
+            this.ensureCorrectServer(measurementRegistration)
+        )
     }
 
     private rounded = (num: number) => Math.round(num * 1000) / 1000
