@@ -151,7 +151,7 @@ declare global {
             getTranslations: (lang: string) => Promise<ICrowdinJson | null>
             getNews: () => Promise<INewsItem[] | null>
             acceptTerms: (terms: number) => Promise<void>
-            registerClient: () => Promise<IUserSettings>
+            registerClient: (isOnline: boolean) => Promise<IUserSettings>
             setIpVersion: (ipv: EIPVersion | null) => Promise<void>
             setActiveClient: (client: string) => Promise<void>
             setActiveLanguage: (language: string) => Promise<void>
@@ -182,6 +182,9 @@ declare global {
                 callback: (loopCounter: number) => any
             ) => Promise<any>
             onLoopModeExpired: (callback: () => any) => Promise<any>
+            onSetIp: (
+                callback: (settings: IUserSettings) => any
+            ) => Promise<any>
             deleteLocalData: () => Promise<void>
             scheduleLoop: (
                 loopInterval: number,

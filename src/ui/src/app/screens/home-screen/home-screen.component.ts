@@ -1,18 +1,7 @@
-import { Component, OnDestroy, OnInit } from "@angular/core"
-import { Router } from "@angular/router"
+import { ChangeDetectorRef, Component, OnInit } from "@angular/core"
 import { TranslocoService } from "@ngneat/transloco"
-import {
-    Subject,
-    combineLatest,
-    distinctUntilChanged,
-    from,
-    map,
-    switchMap,
-    takeUntil,
-    tap,
-} from "rxjs"
-import { TERMS_AND_CONDITIONS, UNKNOWN } from "src/app/constants/strings"
-import { ERoutes } from "src/app/enums/routes.enum"
+import { map, switchMap, takeUntil, withLatestFrom } from "rxjs"
+import { UNKNOWN } from "src/app/constants/strings"
 import { CMSService } from "src/app/services/cms.service"
 import { MessageService } from "src/app/services/message.service"
 import { MainStore } from "src/app/store/main.store"
@@ -26,8 +15,10 @@ import { BaseScreen } from "../base-screen/base-screen.component"
 export class HomeScreenComponent extends BaseScreen implements OnInit {
     env$ = this.mainStore.env$
     ipInfo$ = this.mainStore.settings$.pipe(
-        map((settings) => {
-            if (settings?.ipInfo) {
+        withLatestFrom(this.mainStore.isOnline$),
+        map(([settings, isOnline]) => {
+            setTimeout(() => this.cdr.detectChanges(), 100)
+            if (settings?.ipInfo && isOnline) {
                 const { publicV4, publicV6, privateV4, privateV6 } =
                     settings?.ipInfo
                 return [
@@ -99,15 +90,15 @@ export class HomeScreenComponent extends BaseScreen implements OnInit {
     constructor(
         mainStore: MainStore,
         message: MessageService,
+        private cdr: ChangeDetectorRef,
         private cmsService: CMSService,
-        private router: Router,
         private transloco: TranslocoService
     ) {
         super(mainStore, message)
     }
 
     ngOnInit(): void {
-        this.mainStore.registerClient()
+        this.mainStore.registerClient(navigator.onLine)
         this.mainStore
             .startLoggingJitter()
             .pipe(takeUntil(this.destroyed$))
@@ -116,14 +107,23 @@ export class HomeScreenComponent extends BaseScreen implements OnInit {
     }
 
     getIPIcon(publicAddress: string, privateAddress: string) {
+        const t = (str: string) => this.transloco.translate(str)
         if (publicAddress === UNKNOWN) {
-            return '<i class="app-icon--class app-icon--class-gray"></i>'
+            return `<i title="${t(
+                "Unknown"
+            )}" class="app-icon--class app-icon--class-gray"></i>`
         } else if (!publicAddress) {
-            return '<i class="app-icon--class app-icon--class-red"></i>'
+            return `<i title="${t(
+                "No connectivity"
+            )}" class="app-icon--class app-icon--class-red"></i>`
         } else if (publicAddress !== privateAddress) {
-            return '<i class="app-icon--class app-icon--class-yellow"></i>'
+            return `<i title="${t(
+                "NAT"
+            )}" class="app-icon--class app-icon--class-yellow"></i>`
         } else {
-            return '<i class="app-icon--class app-icon--class-green"></i>'
+            return `<i title="${t(
+                "Public IP"
+            )}" class="app-icon--class app-icon--class-green"></i>`
         }
     }
 }

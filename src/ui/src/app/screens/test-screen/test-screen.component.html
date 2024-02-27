@@ -20,12 +20,14 @@
                     <h1
                         *ngIf="(loopWaiting$ | async) !== true"
                         class="app-title"
+                        aria-live="polite"
                     >
                         {{ t("Measurement") + " " + loopCount }}
                     </h1>
                     <h1
                         *ngIf="(loopWaiting$ | async) === true"
                         class="app-title"
+                        aria-live="polite"
                     >
                         {{
                             t("Result of measurement - waiting")
@@ -35,6 +37,7 @@
                 </ng-container>
             </ng-container>
             <app-alert
+                aria-live="assertive"
                 *ngIf="showCPUWarning$ | async as cpuUsage"
                 kind="warning"
                 [text]="
@@ -70,15 +73,22 @@
 </ng-template>
 
 <ng-template #loopWaitProgressBar>
-    <div style="width: 100%; padding: 0.5em">
-        <h2 *transloco="let t" class="app-title">
-            {{
-                t("Next measurement in") + " " + (ms$ | async | date : "mm:ss")
-            }}
-        </h2>
+    <div
+        *ngIf="progressMode$ | async as progressMode"
+        style="width: 100%; padding: 0.5em"
+    >
+        <ng-container *ngIf="progressMode === 'determinate'">
+            <h2 *transloco="let t" class="app-title">
+                {{
+                    t("Next measurement in") +
+                        " " +
+                        (ms$ | async | date : "mm:ss")
+                }}
+            </h2>
+        </ng-container>
         <mat-progress-bar
             class="app-progress-bar--loop"
-            mode="determinate"
+            [mode]="progressMode"
             [value]="progress$ | async"
         ></mat-progress-bar>
     </div>

@@ -64,15 +64,33 @@ export class MeasurementRunner {
             if (this.settings.shouldAcceptTerms) {
                 return this.settings
             }
-            const ipInfo = await NetworkInfoService.I.getIPInfo(
-                this.settings,
-                this.settingsRequest
-            )
             await ControlServer.I.submitUnsentMeasurements()
-            return { ...this.settings, ipInfo }
+            return this.settings
         } catch (e) {
             throw new Error("The registration couldn't be completed")
         }
+    }
+
+    async getIpV4Info(settings: IUserSettings) {
+        if (!this.settingsRequest) {
+            return undefined
+        }
+        const ipInfo = await NetworkInfoService.I.getIpV4Info(
+            settings,
+            this.settingsRequest
+        )
+        return ipInfo
+    }
+
+    async getIpV6Info(settings: IUserSettings) {
+        if (!this.settingsRequest) {
+            return undefined
+        }
+        const ipInfo = await NetworkInfoService.I.getIpV6Info(
+            settings,
+            this.settingsRequest
+        )
+        return ipInfo
     }
 
     async runMeasurement(options?: MeasurementOptions) {
@@ -165,8 +183,12 @@ export class MeasurementRunner {
     getCurrentPhaseState(): IMeasurementPhaseState & IBasicNetworkInfo {
         const phase =
             this.rmbtClient?.measurementStatus ?? EMeasurementStatus.NOT_STARTED
-        const down = this.rmbtClient?.interimDownMbps ?? -1
-        const up = this.rmbtClient?.interimUpMbps ?? -1
+        const down =
+            this.rmbtClient?.finalDownMbps ||
+            this.rmbtClient?.interimDownMbps ||
+            -1
+        const up =
+            this.rmbtClient?.finalUpMbps || this.rmbtClient?.interimUpMbps || -1
         return {
             duration: this.rmbtClient?.getPhaseDuration(phase) ?? -1,
             progress: this.rmbtClient?.getPhaseProgress(phase) ?? -1,

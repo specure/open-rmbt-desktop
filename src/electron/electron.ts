@@ -10,7 +10,7 @@ import {
 } from "electron"
 if (require("electron-squirrel-startup")) app.quit()
 import path from "path"
-import { t } from "../measurement/services/i18n.service"
+import { I18nService, t } from "../measurement/services/i18n.service"
 import { MeasurementRunner } from "../measurement"
 import { Events } from "./enums/events.enum"
 import { IEnv } from "./interfaces/env.interface"
@@ -35,6 +35,7 @@ import { LoopService } from "../measurement/services/loop.service"
 import { ILoopModeInfo } from "../measurement/interfaces/measurement-registration-request.interface"
 import { EMeasurementStatus } from "../measurement/enums/measurement-status.enum"
 import { ERoutes } from "../ui/src/app/enums/routes.enum"
+import { IPInfo } from "../measurement/interfaces/ip-info.interface"
 
 const createWindow = () => {
     if (process.env.DEV !== "true") {
@@ -144,12 +145,7 @@ protocol.registerSchemesAsPrivileged([
 ])
 
 app.on("window-all-closed", () => {
-    if (process.platform !== "darwin") {
-        app.quit()
-    } else {
-        LoopService.I.resetCounter()
-        MeasurementRunner.I.abortMeasurement()
-    }
+    app.quit()
 })
 
 app.on("activate", () => {
@@ -172,17 +168,68 @@ ipcMain.on(Events.ACCEPT_TERMS, (event, terms: number) => {
     Store.set(TERMS_ACCEPTED_VERSION, terms)
 })
 
-ipcMain.handle(Events.REGISTER_CLIENT, async (event) => {
-    const webContents = event.sender
-    try {
-        const settings = await MeasurementRunner.I.registerClient()
-        if (settings.shouldAcceptTerms) {
-            webContents.send(Events.OPEN_SCREEN, ERoutes.TERMS_CONDITIONS)
-        }
-        return settings
-    } catch (e) {
-        webContents.send(Events.ERROR, e)
+const registerClient = async (webContents: Electron.WebContents) => {
+    const settings = await MeasurementRunner.I.registerClient()
+    if (settings.shouldAcceptTerms) {
+        webContents.send(Events.OPEN_SCREEN, ERoutes.TERMS_CONDITIONS)
     }
+    MeasurementRunner.I.getIpV4Info(settings).then(async (ipV4Info) => {
+        let ipInfo: IPInfo = {
+            privateV4: ipV4Info?.privateV4 ?? "",
+            privateV6: "UNKNOWN",
+            publicV4: ipV4Info?.publicV4 ?? "",
+            publicV6: "UNKNOWN",
+        }
+        let settingsWithIp = { ...settings, ipInfo: ipV4Info }
+        webContents.send(Events.SET_IP, settingsWithIp)
+        const ipV6Info = await MeasurementRunner.I.getIpV6Info(settings)
+        ipInfo = {
+            privateV4: ipV4Info?.privateV4 ?? "",
+            privateV6: ipV6Info?.privateV6 ?? "",
+            publicV4: ipV4Info?.publicV4 ?? "",
+            publicV6: ipV6Info?.publicV6 ?? "",
+        }
+        settingsWithIp = { ...settings, ipInfo }
+        webContents.send(Events.SET_IP, settingsWithIp)
+    })
+    return settings
+}
+
+ipcMain.handle(Events.REGISTER_CLIENT, async (event, isOnline) => {
+    if (!isOnline) {
+        return null
+    }
+    const webContents = event.sender
+    let attempts = 0
+    let maxAttempts = process.env.RECONNECT_ATTEMPTS
+        ? parseInt(process.env.RECONNECT_ATTEMPTS)
+        : 10
+    if (isNaN(maxAttempts)) {
+        maxAttempts = 10
+    }
+    let intervalMs = process.env.RECONNECT_INTERVAL_MS
+        ? parseInt(process.env.RECONNECT_INTERVAL_MS)
+        : 1000
+    if (isNaN(intervalMs)) {
+        intervalMs = 1000
+    }
+    return new Promise((res) => {
+        let interval = setInterval(async () => {
+            try {
+                const settings = await registerClient(webContents)
+                clearInterval(interval)
+                res(settings)
+            } catch (e) {
+                if (attempts >= maxAttempts) {
+                    clearInterval(interval)
+                    webContents.send(Events.ERROR, e)
+                    res(void 0)
+                } else {
+                    attempts++
+                }
+            }
+        }, intervalMs)
+    })
 })
 
 ipcMain.on(Events.SET_IP_VERSION, (event, ipv: EIPVersion | null) => {
@@ -269,7 +316,7 @@ ipcMain.on(Events.DELETE_LOCAL_DATA, () => {
 
 ipcMain.handle(Events.GET_ENV, (): IEnv => {
     return {
-        ACTIVE_LANGUAGE: Store.get(ACTIVE_LANGUAGE) as string,
+        ACTIVE_LANGUAGE: I18nService.I.getActiveLanguage(),
         APP_VERSION: pack.version,
         CMS_URL: process.env.CMS_URL || "",
         CPU_WARNING_PERCENT: process.env.CPU_WARNING_PERCENT
