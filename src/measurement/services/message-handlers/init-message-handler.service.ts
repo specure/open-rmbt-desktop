@@ -1,3 +1,4 @@
+import { EMeasurementServerType } from "../../enums/measurement-server-type.enum"
 import { ELoggerMessage } from "../../enums/logger-message.enum"
 import { ESocketMessage } from "../../enums/socket-message.enum"
 import {
@@ -31,7 +32,9 @@ export class InitMessageHandler implements IMessageHandler {
     }
 
     writeData(): void {
-        if (this.ctx.params.test_server_type === "RMBThttp") {
+        if (
+            this.ctx.params.test_server_type === EMeasurementServerType.RMBTws
+        ) {
             Logger.I.info(ELoggerMessage.T_REQUESTING_UPGRADE, this.ctx.index)
             this.ctx.client.write(ESocketMessage.HTTP_UPGRADE, "ascii")
         }
