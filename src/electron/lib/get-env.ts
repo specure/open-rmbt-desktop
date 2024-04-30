@@ -32,7 +32,6 @@ export const getEnv = () => {
             process.env.ENABLE_HOME_SCREEN_JITTER_BOX === "true",
         ENABLE_LOOP_MODE: process.env.ENABLE_LOOP_MODE || "",
         FLAVOR: process.env.FLAVOR || "rtr",
-        WEBSITE_HOST: new URL(process.env.FULL_HISTORY_RESULT_URL ?? "").origin,
         FULL_HISTORY_RESULT_URL: process.env.FULL_HISTORY_RESULT_URL,
         FULL_STATISTICS_URL: process.env.FULL_STATISTICS_URL,
         FULL_MAP_URL: process.env.FULL_MAP_URL,
