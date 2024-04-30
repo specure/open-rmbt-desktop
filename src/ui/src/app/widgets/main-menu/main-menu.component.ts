@@ -83,7 +83,6 @@ export class MainMenuComponent implements OnChanges {
                     },
                     activeRoute
                 )
-                console.log(project)
                 return menu.map((mi) => {
                     let url = mi.url?.replace(
                         "$lang",
