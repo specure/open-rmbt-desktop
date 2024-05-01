@@ -6,23 +6,22 @@ The project requires Node.js v18 or later.
 
 ## Simple setup
 
-Install packages by running `npm i` or `yarn install` in the root folder and in the `src/ui` folder. Rename `.env.example` file into `.env` (look into the [Configuration](#configuration) section of this document for details).
-Language support can be updated at `src/assets/ont/src/transloco.config.ts`.
-
-In case of reinstalls, use `npm install --no-package-lock`.
+1. Install packages by running `npm i` both in the root folder and in the `src/ui` folder.
+2. Rename `.env.example` file into `.env` (look into the [Configuration](#configuration) section of this document for details).
+3. _(optional)_ Update the list of supported languages at `src/assets/ont/src/transloco.config.ts`.
 
 ## Compilation and running
 
-To download translations from the Crowdin API run
-
-```sh
-$ npm run prepare:translations
-```
-
-To run a measurement from the command line use (for development purposes only)
+To run a measurement from the command line use:
 
 ```sh
 $ npm run start:cli
+```
+
+During the first launch, the command will suggest to pick a DB tenant to use as a measuremments storage. The picked tenant will be used then for all the following measurements. To choose another tenant run the command with an `-r` or `--reset` flag:
+
+```sh
+$ npm run start:cli -- -r
 ```
 
 To launch the app in the dev mode use
