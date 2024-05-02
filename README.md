@@ -6,8 +6,8 @@ The project requires Node.js v18 or later.
 
 ## Simple setup
 
-1. Install packages by running `npm i` both in the root folder and in the `src/ui` folder.
-2. Rename `.env.example` file into `.env` (look into the [Configuration](#configuration) section of this document for details).
+1. Rename `.env.example` file into `.env` (look into the [Configuration](#configuration) section of this document for details).
+2. Install packages by running `npm i` both in the root folder and in the `src/ui` folder.
 3. _(optional)_ Update the list of supported languages at `src/assets/ont/src/transloco.config.ts`.
 
 ## Compilation and running
