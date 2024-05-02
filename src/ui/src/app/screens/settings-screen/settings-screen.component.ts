@@ -24,8 +24,8 @@ import { ClientSelectComponent } from "src/app/widgets/client-select/client-sele
 import { TestServersComponent } from "src/app/widgets/test-servers/test-servers.component"
 import { CMSService } from "src/app/services/cms.service"
 import { SettingsLocalDataComponent } from "src/app/widgets/settings-local-data/settings-local-data.component"
-import { Router } from "@angular/router"
 import { SettingsCommitComponent } from "src/app/widgets/settings-commit/settings-commit.component"
+import { ERoutes } from "src/app/enums/routes.enum"
 
 export interface ISettingsRow {
     title: string
@@ -109,7 +109,7 @@ export class SettingsScreenComponent
                     component: ClientSelectComponent,
                     parameters: {
                         className: "app-client-select--settings",
-                        reloadPage: true,
+                        reloadPage: ERoutes.SETTINGS,
                     },
                 })
             }
@@ -144,7 +144,6 @@ export class SettingsScreenComponent
     constructor(
         mainStore: MainStore,
         message: MessageService,
-        private router: Router,
         private transloco: TranslocoService,
         private cms: CMSService,
         private cdr: ChangeDetectorRef

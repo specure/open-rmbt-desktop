@@ -3,6 +3,7 @@ import { Injectable } from "@angular/core"
 import { Observable, of } from "rxjs"
 import {
     catchError,
+    concatMap,
     distinct,
     first,
     map,
@@ -15,7 +16,6 @@ import { IMainProject } from "../interfaces/main-project.interface"
 import { MainStore } from "../store/main.store"
 import { IMainMenuItem } from "../interfaces/main-menu-item.interface"
 import { environment } from "../constants/environment"
-import { CLIENTS } from "../constants/clients"
 import { IMainPage } from "../interfaces/main-page.interface"
 
 @Injectable({
@@ -44,19 +44,37 @@ export class CMSService {
     }
 
     getProjects(): Observable<IMainProject[]> {
+        let projectMap: { [key: string]: IMainProject } = {}
         return this.http
             .get<IMainProject[]>(`${this.apiUrl}/projects`, {
                 headers: this.headers,
             })
             .pipe(
-                map((projects) => {
-                    const projectMap: { [key: string]: IMainProject } =
-                        projects.reduce(
-                            (acc, c) => ({ ...acc, [c.slug]: c }),
-                            {}
-                        )
+                concatMap((projects) => {
+                    projectMap = projects.reduce(
+                        (acc, c) => ({ ...acc, [c.slug]: c }),
+                        {}
+                    )
+                    return this.getAssetByName("desktop-tenants.txt")
+                }),
+                concatMap((asset) => {
+                    return asset?.url
+                        ? this.http.get(asset?.url, {
+                              responseType: "arraybuffer",
+                              observe: "response",
+                          })
+                        : of(null)
+                }),
+                concatMap((buffer) => {
+                    const txt = buffer?.body
+                        ? new TextDecoder().decode(buffer?.body)
+                        : ""
+                    const retVal = txt ? txt.split("\n") : []
+                    return of(retVal)
+                }),
+                map((tenants: string[]) => {
                     const filteredProjectMap: { [key: string]: IMainProject } =
-                        CLIENTS.reduce(
+                        tenants.reduce(
                             (acc, c) => ({ ...acc, [c]: projectMap[c] }),
                             {}
                         )

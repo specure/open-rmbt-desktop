@@ -23,7 +23,6 @@ import {
     Store,
     TERMS_ACCEPTED_VERSION,
 } from "./store.service"
-import { DBService } from "./db.service"
 import { SimpleHistoryResult } from "../dto/simple-history-result.dto"
 import { INewsRequest, INewsResponse } from "../interfaces/news.interface"
 import { EIPVersion } from "../enums/ip-version.enum"
@@ -95,6 +94,7 @@ export class ControlServer {
             "Content-Type": "application/json",
         }
         const activeClient = Store.I.get(ACTIVE_CLIENT) as string
+        Logger.I.info(`Active tenant is "${activeClient}"`)
         if (activeClient) {
             headers["X-Nettest-Client"] = activeClient
         }
@@ -265,33 +265,11 @@ export class ControlServer {
                     { headers: this.headers }
                 )
             ).data
-            await DBService.I.saveMeasurement({
-                ...result,
-                sent_to_server: true,
-            })
             Logger.I.info("Result is submitted. Response: %o", response)
         } catch (e: any) {
-            if (e.response.status != 400) {
-                await DBService.I.saveMeasurement(result)
-            }
             if (result.test_status !== EMeasurementFinalStatus.ABORTED) {
                 this.handleError(e)
             }
-        }
-    }
-
-    async submitUnsentMeasurements() {
-        try {
-            const unsent = await DBService.I.getUnsentMeasurements()
-            if (!unsent.length) {
-                return
-            }
-            const promises = unsent.map((result) =>
-                this.submitMeasurement(result)
-            )
-            await Promise.allSettled(promises)
-        } catch (e: any) {
-            this.handleError(e)
         }
     }
 
@@ -309,10 +287,7 @@ export class ControlServer {
                 retVal = await this.getRTRHistory(paginator)
             }
         } catch (e) {
-            retVal = await DBService.I.getAllMeasurements()
-            if (!retVal) {
-                this.handleError(e)
-            }
+            this.handleError(e)
         }
         Logger.I.info("The history is: %o", retVal)
         return retVal
@@ -402,10 +377,7 @@ export class ControlServer {
                 retVal = await this.getRTRMeasurementResult(uuid)
             }
         } catch (e: any) {
-            retVal = await DBService.I.getMeasurementByUuid(uuid)
-            if (!retVal) {
-                this.handleError(e)
-            }
+            this.handleError(e)
         }
         Logger.I.info("The final result is: %o", retVal)
         return retVal

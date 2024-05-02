@@ -24,4 +24,6 @@ export interface IMainProject extends ITranslatable {
     regulator_link?: string
     require_location?: boolean
     location?: { longitude: number; latitude: number }
+    desktop_methodology_route?: string
+    desktop_help_route?: string
 }

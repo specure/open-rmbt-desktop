@@ -1,4 +1,5 @@
 import { Component, Input } from "@angular/core"
+import { Router } from "@angular/router"
 import { combineLatest, map } from "rxjs"
 import {
     IDynamicComponent,
@@ -31,7 +32,8 @@ export class ClientSelectComponent implements IDynamicComponent {
     constructor(
         private mainStore: MainStore,
         private testStore: TestStore,
-        private cms: CMSService
+        private cms: CMSService,
+        private router: Router
     ) {}
 
     changeClient(client: any) {
@@ -39,7 +41,11 @@ export class ClientSelectComponent implements IDynamicComponent {
         this.mainStore.setClient(client.slug)
         this.testStore.setActiveServer(null)
         if (this.parameters?.["reloadPage"]) {
-            location.reload()
+            this.router
+                .navigateByUrl("/", { skipLocationChange: true })
+                .then(() => {
+                    this.router.navigate([this.parameters!["reloadPage"]])
+                })
         }
     }
 }

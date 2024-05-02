@@ -71,8 +71,9 @@ export class MainMenuComponent implements OnChanges {
             this.activeRoute.url,
             this.transloco.selectTranslation(),
             this.mainStore.env$,
+            this.cmsService.getProject(),
         ]).pipe(
-            map(([menu, activeRoute, _, env]) => {
+            map(([menu, activeRoute, _, env, project]) => {
                 this.settingsItem = this.parseMenuItem(
                     {
                         label: "Options",
@@ -83,22 +84,20 @@ export class MainMenuComponent implements OnChanges {
                     activeRoute
                 )
                 return menu.map((mi) => {
-                    let item = mi
-                    if (mi.url?.includes("$lang")) {
-                        item = {
-                            ...mi,
-                            url: mi.url.replace(
-                                "$lang",
-                                this.i18n.getActiveBrowserLang()
-                            ),
-                        }
-                    } else if (mi.url?.includes("$os") && env?.OS) {
-                        item = {
-                            ...mi,
-                            url: mi.url.replace("$os", env.OS),
-                        }
+                    let url = mi.url?.replace(
+                        "$lang",
+                        this.i18n.getActiveBrowserLang()
+                    )
+                    if (url?.includes("$host") && project?.regulator_link) {
+                        url = url.replace("$host", project?.regulator_link)
                     }
-                    return this.parseMenuItem(item, activeRoute)
+                    if (url?.includes("$help") && project?.desktop_help_route) {
+                        url = url.replace("$help", project?.desktop_help_route)
+                    }
+                    if (url?.includes("$os") && env?.OS) {
+                        url = url.replace("$os", env.OS)
+                    }
+                    return this.parseMenuItem({ ...mi, url }, activeRoute)
                 })
             })
         )

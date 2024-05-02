@@ -60,6 +60,15 @@ export class HeaderComponent {
                       }.${this.transloco.getDefaultLang()}.svg`
                   )
         ),
+        concatMap((asset) =>
+            asset
+                ? of(asset)
+                : this.cms.getAssetByName(
+                      `logo-header-alt.${
+                          this.mainStore.env$.value?.X_NETTEST_CLIENT
+                      }.${this.transloco.getDefaultLang()}.svg`
+                  )
+        ),
         map((asset) => asset?.url || "/assets/images/logo-header.svg")
     )
 

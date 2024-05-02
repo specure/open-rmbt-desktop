@@ -15,11 +15,10 @@ import { IUserSettings } from "./interfaces/user-settings-response.interface"
 import { IMeasurementServerResponse } from "./interfaces/measurement-server-response.interface"
 import { config } from "dotenv"
 import { NetworkInfoService } from "./services/network-info.service"
-import { DBService } from "./services/db.service"
 import "reflect-metadata"
 import { EMeasurementFinalStatus } from "./enums/measurement-final-status"
 import { AutoUpdater } from "./services/auto-updater.service"
-import { ACTIVE_SERVER, Store } from "./services/store.service"
+import { ACTIVE_CLIENT, ACTIVE_SERVER, Store } from "./services/store.service"
 import { ILoopModeInfo } from "./interfaces/measurement-registration-request.interface"
 import { LoopService } from "./services/loop.service"
 import { Events } from "../electron/enums/events.enum"
@@ -33,6 +32,7 @@ config({
 export interface MeasurementOptions {
     platform?: string
     loopModeInfo?: ILoopModeInfo
+    tenant?: string
 }
 
 export class MeasurementRunner {
@@ -65,7 +65,6 @@ export class MeasurementRunner {
 
     private constructor() {
         Logger.init()
-        DBService.I.init()
     }
 
     updateStartTime() {
@@ -94,10 +93,6 @@ export class MeasurementRunner {
             this.settings = await ControlServer.I.getUserSettings(
                 this.settingsRequest
             )
-            if (this.settings.shouldAcceptTerms) {
-                return this.settings
-            }
-            await ControlServer.I.submitUnsentMeasurements()
             return this.settings
         } catch (e) {
             throw new Error("The registration couldn't be completed")
@@ -129,6 +124,9 @@ export class MeasurementRunner {
     async runMeasurement(options?: MeasurementOptions) {
         this.rmbtClient = undefined
         this.startTimeMs = Date.now()
+        if (options?.tenant) {
+            Store.I.set(ACTIVE_CLIENT, options.tenant)
+        }
         try {
             this.setCPUInfoInterval()
             if (!this.settings) {
@@ -165,7 +163,10 @@ export class MeasurementRunner {
             return this.rmbtClient!.measurementStatus
         } catch (e: any) {
             if (e) {
-                this.rmbtClient!.measurementStatus = EMeasurementStatus.ERROR
+                if (this.rmbtClient) {
+                    ;(this.rmbtClient as RMBTClient).measurementStatus =
+                        EMeasurementStatus.ERROR
+                }
                 Logger.I.error(e)
                 try {
                     await ControlServer.I.submitMeasurement(
