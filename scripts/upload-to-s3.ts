@@ -12,26 +12,28 @@ import dotenv from "dotenv"
 dotenv.config()
 
 async function main() {
+    const Key = `${pack.name}-${pack.version}.exe`
     const Body = fs.readFileSync(argv.file)
-    console.log("process.env.S3_REGION", process.env.S3_REGION)
-    console.log("process.env.S3_BUCKET", process.env.S3_BUCKET)
-    console.log("process.env.S3_KEY", process.env.S3_KEY)
+    const config = {
+        region: process.env.S3_REGION,
+        credentials: {
+            accessKeyId: process.env.S3_KEY_ID!,
+            secretAccessKey: process.env.S3_KEY!,
+        },
+    }
+    console.log("config", config)
+    console.log("bucket", process.env.S3_BUCKET)
+    console.log("object key", Key)
     const parallelUploads3 = new Upload({
-        client:
-            new S3({
-                region: process.env.S3_REGION,
-            }) ||
-            new S3Client({
-                region: process.env.S3_REGION,
-            }),
+        client: new S3(config) || new S3Client(config),
         params: {
             Bucket: process.env.S3_BUCKET,
-            Key: process.env.S3_KEY,
+            Key,
             Body,
         },
         tags: [{ Key: "Version", Value: pack.version }],
         queueSize: 4,
-        partSize: 1024 * 1024 * 5,
+        partSize: 1024 * 1024 * 10,
         leavePartsOnError: false,
     })
 
