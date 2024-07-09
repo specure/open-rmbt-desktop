@@ -24,7 +24,8 @@
         "make:app-store": "npm run build:all && cross-env APP_STORE=true electron-forge make --platform=mas --arch=x64",
         "make:deb": "npm run build:all && cross-env DEB=true electron-forge make --platform=linux --arch=x64",
         "make:rpm": "npm run build:all && cross-env RPM=true electron-forge make --platform=linux --arch=x64",
-        "prepare": "husky install"
+        "prepare": "husky install",
+        "upload-to-s3": "npx ts-node scripts/upload-to-s3.ts"
     },
     "author": "Specure",
     "license": "Apache-2.0",
@@ -73,6 +74,8 @@
         "xliff": "^6.1.0"
     },
     "dependencies": {
+        "@aws-sdk/client-s3": "^3.609.0",
+        "@aws-sdk/lib-storage": "^3.609.0",
         "axios": "^1.4.0",
         "dayjs": "^1.11.8",
         "electron-dl": "^3.5.0",
